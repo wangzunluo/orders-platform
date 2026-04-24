@@ -1,0 +1,70 @@
+# ======================
+# Python
+# ======================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pkl
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# ======================
+# Environment variables
+# ======================
+.env
+.env.*
+
+# ======================
+# IDEs
+# ======================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ======================
+# Logs
+# ======================
+*.log
+
+# ======================
+# Docker
+# ======================
+*.tar
+*.tar.gz
+
+# Ignore local docker volumes (optional safety)
+docker-data/
+
+# ======================
+# OS files
+# ======================
+.DS_Store
+Thumbs.db
+
+# ======================
+# Database / Postgres local artifacts
+# ======================
+*.sqlite
+*.sqlite3
+
+# ======================
+# Testing / coverage
+# ======================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ======================
+# Node (only if you add frontend later)
+# ======================
+node_modules/
+npm-debug.log*
