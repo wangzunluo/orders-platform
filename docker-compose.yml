@@ -33,4 +33,24 @@ services:
       timeout: 5s
       retries: 10
 
+  activity-service:
+    build:
+      context: ./activity-service
+      dockerfile: Dockerfile
+    ports:
+      - "8003:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/27017"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   

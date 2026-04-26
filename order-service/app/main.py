@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 
 RETRIES = 5
 USER_SERVICE_URL = "http://user-service"
+ACTIVITY_SERVICE_URL = "http://activity-service:80/event"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,6 +39,16 @@ def create_order(user_id: int, item: str, db: Session = Depends(get_db)):
     db.add(order)
     db.commit()
     db.refresh(order)
+    event = {
+        "user_id": user_id,
+        "service": "order-service",
+        "event_type": "order_created",
+        "details": {
+            "order_id": order.id,
+            "item": item
+        }
+    }
+    requests.post(ACTIVITY_SERVICE_URL, json=event)
     return order
 
 @app.get("/orders/{order_id}")
