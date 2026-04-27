@@ -11,7 +11,7 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -52,7 +52,7 @@ jobs:
           docker push $ECR_REGISTRY/activity-service:latest
 
   deploy:
-    needs: build-and-push
+    needs: self-hosted
     runs-on: ubuntu-latest
 
     steps:
