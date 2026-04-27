@@ -1,46 +1,24 @@
 services:
   user-service:
-    build:
-      context: ./user-service
-      dockerfile: Dockerfile
+    env_file:
+      - .env
+    image: 299029452437.dkr.ecr.us-east-1.amazonaws.com/user-service:latest
     ports:
       - "8001:80"
-    depends_on:
-      db:
-        condition: service_healthy
 
   order-service:
-    build:
-      context: ./order-service
-      dockerfile: Dockerfile
+    env_file:
+      - .env
+    image: 299029452437.dkr.ecr.us-east-1.amazonaws.com/order-service:latest
     ports:
       - "8002:80"
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: appdb
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   activity-service:
-    build:
-      context: ./activity-service
-      dockerfile: Dockerfile
+    image: 299029452437.dkr.ecr.us-east-1.amazonaws.com/activity-service:latest
     ports:
       - "8003:80"
     depends_on:
-      db:
+      mongo:
         condition: service_healthy
 
   mongo:
