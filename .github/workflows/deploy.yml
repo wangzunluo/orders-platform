@@ -52,8 +52,8 @@ jobs:
           docker push $ECR_REGISTRY/activity-service:latest
 
   deploy:
-    needs: self-hosted
-    runs-on: ubuntu-latest
+    needs: build-and-push
+    runs-on: self-hosted
 
     steps:
       - name: Deploy to EC2 via SSH
