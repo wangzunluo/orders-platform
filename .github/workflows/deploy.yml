@@ -1,0 +1,68 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - ec2
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 299029452437.dkr.ecr.us-east-1.amazonaws.com
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region $.AWS_REGION \
+          | docker login --username AWS \
+          --password-stdin $ECR_REGISTRY
+      
+      - name: Build user-service
+        run: |
+          docker build -t orders-platform-user-service:latest ./user-service
+          docker tag orders-platform-user-service:latest $ECR_REGISTRY/user-service:latest
+      
+      - name: Build order-service
+        run: |
+          docker build -t orders-platform-order-service:latest ./order-service
+          docker tag orders-platform-order-service:latest $ECR_REGISTRY/order-service:latest
+        
+      - name: Build activity-service
+        run: |
+          docker build -t orders-platform-activity-service:latest ./activity-service
+          docker tag orders-platform-activity-service:latest $ECR_REGISTRY/activity-service:latest
+
+      - name: Push imagesto ECR
+        run: |
+          docker push $ECR_REGISTRY/user-service:latest
+          docker push $ECR_REGISTRY/order-service:latest
+          docker push $ECR_REGISTRY/activity-service:latest
+
+deploy:
+  needs: build-and-push
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          cd ~/orders-platform
+          docker compose pull
+          docker compose up -d --remove-orphans
