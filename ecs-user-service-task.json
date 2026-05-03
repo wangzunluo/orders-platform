@@ -1,0 +1,45 @@
+{
+  "executionRoleArn": "arn:aws:iam::299029452437:role/ecsTaskExecutionRole",
+  "family": "user-service",
+  "networkMode": "bridge",
+  "requiresCompatibilities": ["EC2"],
+  "cpu": "256",
+  "memory": "512",
+  "containerDefinitions": [
+    {
+      "name": "user-service",
+      "image": "299029452437.dkr.ecr.us-east-1.amazonaws.com/user-service:latest",
+      "essential": true,
+
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 8001
+        }
+      ],
+
+      "environment": [
+        { "name": "DB_HOST", "value": "<rds-endpoint>" },
+        { "name": "DB_PORT", "value": "5432" },
+        { "name": "DB_NAME", "value": "appdb" },
+        { "name": "DB_USER", "value": "postgres" }
+      ],
+
+      "secrets": [
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:299029452437:secret:DATABASE_PW-e1vS6I"
+        }
+      ],
+
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/user-service",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
