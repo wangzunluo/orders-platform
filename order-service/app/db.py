@@ -14,7 +14,7 @@ if "DB_USER" in os.environ:
 else:
     print('creating db url from EC2 env file')
     DATABASE_URL = os.getenv("DATABASE_URL")
-
+print(DATABASE_URL.split('@')[-1])
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()

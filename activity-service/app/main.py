@@ -16,7 +16,7 @@ if "MONGO_USER" in os.environ:
 else:
     print('creating mongo url from default local mongodb')
     MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:27017/")
-
+print(MONGO_URL.split('@')[-1])
 client = MongoClient(MONGO_URL)
 db = client["activity_db"]
 collection = db["events"]
