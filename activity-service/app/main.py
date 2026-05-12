@@ -3,19 +3,20 @@ from pymongo import MongoClient
 from datetime import datetime, timezone
 import os
 
-MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:27017/")
+def build_database_url():
+    if os.getenv("MONGO_URL"):
+        print("using MONGO_URL")
+        return os.getenv("MONGO_URL")
 
-if "MONGO_USER" in os.environ:
-    MONGO_URL = (
+    print("building DATABASE_URL from parts")
+    return (
         f"mongodb://{os.getenv('MONGO_USER')}:"
         f"{os.getenv('MONGO_PASSWORD')}@"
         f"{os.getenv('MONGO_HOST')}:"
         f"{os.getenv('MONGO_PORT')}/"
         f"{os.getenv('MONGO_OPTIONS')}"
     )
-else:
-    print('creating mongo url from default local mongodb')
-    MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:27017/")
+MONGO_URL = build_database_url()
 print(MONGO_URL.split('@')[-1])
 client = MongoClient(MONGO_URL)
 db = client["activity_db"]
