@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from . import models, schemas
 from .dependencies import get_db
-from .db import Base, engine
+from .db import Base, get_engine
 from contextlib import asynccontextmanager
 import time
 
@@ -10,6 +10,7 @@ RETRIES = 5
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    engine = get_engine()
     for _ in range(RETRIES):
         try:
             engine.connect()
