@@ -18,5 +18,4 @@ def get_engine():
             f"{os.getenv('DB_NAME')}"
             f"{os.getenv('DB_OPTIONS')}"
         )
-    print(url)
     return create_engine(url)
