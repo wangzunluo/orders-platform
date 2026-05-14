@@ -3,7 +3,7 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - ec2
+      - ecs
 
 env:
   AWS_REGION: us-east-1
@@ -51,13 +51,74 @@ jobs:
           docker push $ECR_REGISTRY/order-service:latest
           docker push $ECR_REGISTRY/activity-service:latest
 
-  deploy:
+  deploy-ecs:
     needs: build-and-push
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy containers locally
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Detect changed task definitions
+        id: changes
         run: |
-          cd ~/orders-platform
-          docker compose pull
-          docker compose up -d --remove-orphans
+          files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} || true)
+
+          echo "Changed files:"
+          echo "$files"
+
+          tasks=$(echo "$files" | grep "ecs-tasks/" || true)
+
+          echo "tasks=$tasks" >> $GITHUB_OUTPUT
+
+      - name: Register task definitions and deploy
+        if: steps.changes.outputs.tasks != ''
+        run: |
+          set -e
+
+          for file in ${{ steps.changes.outputs.tasks }}; do
+            echo "Processing $file"
+
+            # extract service name from file (ecs-tasks/user-service.json → user-service)
+            service=$(basename "$file" .json)
+
+            echo "Service: $service"
+
+            echo "Registering new task definition revision..."
+            aws ecs register-task-definition \
+              --cli-input-json file://$file
+
+            echo "Checking if ECS service exists..."
+
+            SERVICE_STATUS=$(aws ecs describe-services \
+              --cluster $ECS_CLUSTER \
+              --services $service \
+              --query 'services[0].status' \
+              --output text 2>/dev/null || echo "MISSING")
+
+            if [ "$SERVICE_STATUS" = "MISSING" ] || [ "$SERVICE_STATUS" = "INACTIVE" ]; then
+              echo "Creating ECS service: $service"
+
+              aws ecs create-service \
+                --cluster $ECS_CLUSTER \
+                --service-name $service \
+                --task-definition $service \
+                --desired-count 1 \
+                --launch-type EC2
+            else
+              echo "Updating ECS service: $service"
+
+              aws ecs update-service \
+                --cluster $ECS_CLUSTER \
+                --service $service \
+                --force-new-deployment
+            fi
+
+          done

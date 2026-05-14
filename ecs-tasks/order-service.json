@@ -1,0 +1,46 @@
+{
+  "executionRoleArn": "arn:aws:iam::299029452437:role/ecsTaskExecutionRole",
+  "family": "order-service",
+  "networkMode": "bridge",
+  "requiresCompatibilities": ["EC2"],
+  "cpu": "256",
+  "memory": "512",
+  "containerDefinitions": [
+    {
+      "name": "order-service",
+      "image": "299029452437.dkr.ecr.us-east-1.amazonaws.com/order-service:latest",
+      "essential": true,
+
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 8002
+        }
+      ],
+
+      "environment": [
+        { "name": "DB_HOST", "value": "orders-platform-db.c0n4ea2kes3a.us-east-1.rds.amazonaws.com" },
+        { "name": "DB_PORT", "value": "5432" },
+        { "name": "DB_NAME", "value": "appdb" },
+        { "name": "DB_USER", "value": "postgres" },
+        { "name": "DB_OPTIONS", "value": "?sslmode=require"}
+      ],
+
+      "secrets": [
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:299029452437:secret:DATABASE_PW-e1vS6I"
+        }
+      ],
+
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/order-service",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
