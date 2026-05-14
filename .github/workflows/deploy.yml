@@ -65,6 +65,22 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+
+      - name: Run DB initialization scripts
+        run: |
+          echo "Running DB setup (create_tables)..."
+
+          SERVICES="user-service order-service"
+
+          for service in $SERVICES; do
+            echo "Running DB init for $service"
+
+            docker run --rm \
+              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              $ECR_REGISTRY/$service:latest \
+              python -m scripts.init_db
+
+          done
       
       - name: Detect changed task definitions
         id: changes

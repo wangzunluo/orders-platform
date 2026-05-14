@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 import requests
-from .db import Base, engine
+from .db import Base, get_engine
 from . import models
 from sqlalchemy.orm import Session
 from .dependencies import get_db
@@ -13,6 +13,7 @@ ACTIVITY_SERVICE_URL = "http://activity-service:80/event"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    engine = get_engine()
     for _ in range(RETRIES):
         try:
             engine.connect()
