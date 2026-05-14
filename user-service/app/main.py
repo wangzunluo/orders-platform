@@ -1,10 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy import text
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from . import models, schemas
 from .dependencies import get_db
 from .db import Base, get_engine
 from contextlib import asynccontextmanager
-import time
+import asyncio
 
 RETRIES = 5
 
@@ -13,15 +15,15 @@ async def lifespan(app: FastAPI):
     engine = get_engine()
     for _ in range(RETRIES):
         try:
-            engine.connect()
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
             print("Database connection successful")
-            engine.close()
             break
         except Exception as e:
             print(f"Database connection failed: {e}")
-            time.sleep(3)
-
-    Base.metadata.create_all(bind=engine)
+            await asyncio.sleep(3)
+    else:
+        raise RuntimeError("Could not connect to DB after retries")
     yield
     print("Shutting down...")
 
@@ -29,12 +31,13 @@ app = FastAPI(lifespan=lifespan)
 
 @app.post("/users", response_model=schemas.UserResponse)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
     db_user = models.User(name=user.name, email=user.email)
     db.add(db_user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Email already registered")
     db.refresh(db_user)
     return db_user
 
