@@ -23,6 +23,7 @@
         { "name": "DB_PORT", "value": "5432" },
         { "name": "DB_NAME", "value": "appdb" },
         { "name": "DB_USER", "value": "postgres" },
+        { "name": "DB_OPTIONS", "value": "?sslmode=require"}
         { "name": "MONGO_USER", "value": "mongo" },
         { "name": "MONGO_PORT", "value": "27017" },
         { "name": "MONGO_HOST", "value": "docdb-2026-05-12-02-54-02.c0n4ea2kes3a.us-east-1.docdb.amazonaws.com" },

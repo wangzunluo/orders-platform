@@ -16,6 +16,7 @@ def get_engine():
             f"{os.getenv('DB_HOST')}:"
             f"{os.getenv('DB_PORT')}/"
             f"{os.getenv('DB_NAME')}"
+            f"{os.getenv('DB_OPTIONS')}"
         )
     print(url.split('@')[-1])
     return create_engine(url)
